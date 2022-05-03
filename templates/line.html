@@ -1,0 +1,21 @@
+{% set active_page = "line" -%}
+{% include "header.html" %}
+    <div class="container p-3 lead">
+        <form method=POST enctype=multipart/form-data action="{{ url_for('identify_line') }}">
+            <div class="form-group">
+                <label for="input_text">Input text</label>
+                <input type="text" class="form-control" id="input_text" name="input_text" placeholder="Enter the line to identify" {% if 'text' in data %}value="{{data.text}}"{% endif %}>
+            </div>
+            <button type="submit" class="btn btn-primary">Identify</button>
+        </form>
+    </div>
+    {% if 'result' in data %}
+    <div class="container p-3 lead">
+        <div class="table-responsive">
+            {% set line_id = 0 %}
+            {% set line_result = data.result %}
+            {% include "line_result.html" %}
+        </div>
+    </div>
+    {% endif %}
+{% include "footer.html" %}

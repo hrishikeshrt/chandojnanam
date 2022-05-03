@@ -1,0 +1,63 @@
+{% set active_page = "image" -%}
+{% include "header.html" %}
+    <div class="container p-3 lead">
+        {% if data.image %}
+        <div class="my-4 border">
+            <img src="data:image/jpeg;base64,{{data.image}}" alt="Image">
+            <button id="upload-another-image" type="button" class="btn btn-sm btn-secondary float-right" title="Upload Another Image">
+                <i class="fa fa-upload"></i>
+            </button>
+        </div>
+        <form id="upload-container" class="d-none" method=POST enctype=multipart/form-data action="{{ url_for('identify_from_image') }}">
+        {% else %}
+        <form id="upload-container" method=POST enctype=multipart/form-data action="{{ url_for('identify_from_image') }}">
+        {% endif %}
+            <div class="input-group my-4">
+                <div class="input-group-prepend">
+                    <span class="input-group-text" id="file_upload">Upload</span>
+                </div>
+                <div class="custom-file">
+                    <input type="file" class="custom-file-input" id="image_file" name="image_file" aria-describedby="file_upload">
+                    <label class="custom-file-label" for="image_file">Choose image file</label>
+                </div>
+            </div>
+            <div class="form-group">
+                {% for engine, label  in data.engines.items() %}
+                <div class="custom-control custom-radio custom-control-inline">
+                    <input class="custom-control-input" type="radio" name="ocr-engine" id="ocr-engine-{{engine}}" value="{{engine}}" {% if data.engine == engine %}checked{% endif %}>
+                    <label class="custom-control-label" for="ocr-engine-{{engine}}">{{label}}</label>
+                </div>
+                {% endfor %}
+            </div>
+            <button type="submit" class="btn btn-primary">OCR + Identify</button>
+        </form>
+        <script>
+        $(document).ready(function () {
+            bsCustomFileInput.init();
+        })
+        $("#upload-another-image").click(function () {
+            $("#upload-container").removeClass("d-none");
+        });
+        </script>
+
+        <hr>
+
+        <form method=POST enctype=multipart/form-data action="{{ url_for('identify_from_image') }}">
+            <div class="form-group">
+                <label for="input_text">Text</label>
+                <textarea class="form-control" rows="4" id="input_text" name="input_text" placeholder="OCR'ed text will appear here">{% if 'text' in data %}{{data.text}}{% endif %}</textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Identify</button>
+        </form>
+    </div>
+    {% if 'result' in data %}
+    <div class="container p-3 lead">
+        {% for line_answer in data.result %}
+        {% set line_text = line_answer.line %}
+        {% set line_id = loop.index %}
+        {% set line_result = line_answer.result %}
+        {% include "line_result.html" %}
+        {% endfor %}
+    </div>
+    {% endif %}
+{% include "footer.html" %}

@@ -1,0 +1,23 @@
+{% set active_page = "about" %}
+{% include "header.html" %}
+
+<div class="container p-3">
+    <p class="lead">
+        <b>Sanskrit prosody</b> or <b>chandaśāstra</b> (<i>Devanagari: छन्दशास्त्र</i>) is the study of poetic metres and verse in Sanskrit.
+        The <b>chanda</b>s have their own rhythm, movements and aesthetics. Sanskrit metres include those
+        based on a fixed number of syllables per verse, and those based on fixed number of morae per
+        verse.
+    </p>
+    <p class="lead">
+        Every <b>akṣara</b> (syllable) is identified to be either <b>laghu</b> (short) or <b>guru</b> (long) as per the
+        rules of <b>chandaśāstra</b>. Thus, every line of Sanskrit text can be transformed into a binary sequence of
+        <b>laghu</b> and <b>guru</b> markers. Specific patterns of such sequences are identified as various chandas.
+    </p>
+    <p class="lead">
+        <b>Chandojñānam</b> (<i>Devanagari: छन्दोज्ञानम्</i>), the <b>chanda</b> identification system made available
+        hereby has a list of over 200 <b>chanda</b>s collated from various sources, most notable among which are
+        <b>vṛttaratnākara</b> and <b>śabdakalpadruma</b>.
+    </p>
+    <a class="btn btn-secondary" href="{{url_for('show_help')}}" role="button">Learn more</a>
+</div>
+{% include "footer.html" %}

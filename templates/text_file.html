@@ -1,0 +1,45 @@
+{% set active_page = "file" -%}
+{% include "header.html" %}
+    <div class="container p-3 lead">
+        <div class="alert alert-danger text-center" role="alert">
+        Caution: This interface is a work in undergoing changes.
+        </div>
+
+        <form method=POST enctype=multipart/form-data action="{{ url_for('identify_from_file') }}">
+            <div class="input-group my-4">
+                <div class="input-group-prepend">
+                    <span class="input-group-text" id="file_upload">Upload</span>
+                </div>
+                <div class="custom-file">
+                    <input type="file" class="custom-file-input" id="text_file" name="text_file" aria-describedby="file_upload">
+                    <label class="custom-file-label" for="text_file">Choose text file</label>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="custom-control custom-radio custom-control-inline">
+                    <input class="custom-control-input" type="radio" name="output-type" id="output-type-compact" value="compact" checked>
+                    <label class="custom-control-label" for="output-type-compact">Compact TXT Output</label>
+                </div>
+                <div class="custom-control custom-radio custom-control-inline">
+                    <input class="custom-control-input" type="radio" name="output-type" id="output-type-detailed" value="detailed">
+                    <label class="custom-control-label" for="output-type-detailed">Detailed JSON Output</label>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Analyse</button>
+        </form>
+        <script>
+        $(document).ready(function () {
+            bsCustomFileInput.init();
+        })
+        </script>
+
+        <hr>
+    </div>
+    {% if 'result' in data %}
+    <div class="container p-3 lead">
+        <pre class="pre-scrollable">
+        {{data.result}}
+        </pre>
+    </div>
+    {% endif %}
+{% include "footer.html" %}

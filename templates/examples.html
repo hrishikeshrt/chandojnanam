@@ -1,0 +1,19 @@
+{% set active_page = "examples" %}
+{% include "header.html" %}
+<div class="container p-3">
+    {% for name, example in data['examples'].items() %}
+    {% if loop.index % 2 == 1 %}
+    <div class="row">
+    {% endif %}
+    <div class="border rounded m-2 p-3 col-sm">
+        <h5>{{name}}</h5>
+        {% for line in example %}
+            <br>{{line}}
+        {% endfor %}
+    </div>
+    {% if loop.index % 2 == 0 %}
+    </div>
+    {% endif %}
+    {% endfor %}
+</div>
+{% include "footer.html" %}

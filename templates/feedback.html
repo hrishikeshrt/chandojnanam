@@ -1,0 +1,90 @@
+<div id="feedback-modal" class="modal fade" role="dialog" tabindex="-1" aria-labelledby="feedback-modal-label"
+  aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="feedback-modal-label">
+          Feedback on <a href="{{request.url}}">{{request.url}}</a>
+        </h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="feedback-form">
+          <div class="card rounded">
+            <div class="card-body p-3">
+              <div class="form-group">
+                <div class="input-group mb-2">
+                  <div class="input-group-prepend">
+                    <div class="input-group-text"><i class="fas fa-link"></i></div>
+                  </div>
+                  <input type="text" readonly class="form-control" name="feedback-url" value="{{request.url}}">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <div class="input-group mb-2">
+                  <div class="input-group-prepend">
+                    <div class="input-group-text"><i class="fa fa-user"></i></div>
+                  </div>
+                  <input type="text" placeholder="Your Name" class="form-control" name="feedback-name" required>
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="input-group mb-2">
+                  <div class="input-group-prepend">
+                    <div class="input-group-text"><i class="fa fa-at"></i></div>
+                  </div>
+                  <input type="email" placeholder="Your Email" class="form-control" name="feedback-email" required>
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="input-group mb-2">
+                  <div class="input-group-prepend">
+                    <div class="input-group-text"><i class="fa fa-comment"></i></div>
+                  </div>
+                  <textarea rows="6" placeholder="Feedback Message" name="feedback-msg"
+                    class="form-control" required></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="feedback-submit">Send</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  var $form = $('#feedback-form');
+  $('#feedback-submit').on('click', function (event) {
+    if ($form[0].checkValidity()) {
+      $.post("/jnanasangraha/feedback",
+        $form.serialize(),
+        function (response) {
+          if (response.success) {
+            $.notify({
+              message: response.message
+            }, {
+              type: "success"
+            });
+          } else {
+            $.notify({
+              message: response.message
+            }, {
+              type: "danger"
+            });
+          }
+        },
+        'json');
+      $(this).prev().click();
+    } else {
+      $form[0].reportValidity();
+    }
+  });
+</script>

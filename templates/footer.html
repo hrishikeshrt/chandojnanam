@@ -1,0 +1,37 @@
+        <!-- Include all compiled plugins (below), or include individual files as needed -->
+        <script src="{{url_for('static', filename='js/popper.min.js')}}"></script>
+        <script src="{{url_for('static', filename='bootstrap/js/bootstrap.min.js')}}"></script>
+
+        <script src="{{url_for('static', filename='plugins/bs-custom-file-input.min.js')}}"></script>
+        <footer class="footer">
+            <div class="container-fluid">
+                <span class="text-muted">
+                    &copy; 2020-{{now.year}}, Hrishikesh Terdalkar.
+                </span>
+
+            </div>
+        </footer>
+        <script>
+            $(function () {
+                $('[data-toggle="tooltip"]').tooltip();
+            });
+        </script>
+        <!-- Bootstrap-Notify -->
+        <script src="{{url_for('static', filename='plugins/js/bootstrap-notify.min.js')}}"></script>
+        <script>
+            $.notifyDefaults({
+                placement: {
+                    from: "top",
+                    align: "center"
+                },
+                allow_dismiss: false,
+                delay: 3000,
+                timer: 500,
+                animate: {
+                    enter: 'animated fadeInDown',
+                    exit: 'animated fadeOutUp'
+                }
+            });
+        </script>
+    </body>
+</html>

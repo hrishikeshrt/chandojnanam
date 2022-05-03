@@ -1,0 +1,118 @@
+{% if line_result %}
+<table class="table table-sm table-bordered table-striped mx-auto">
+    <tr>
+        <th>Letters</th>
+        {% for s in line_result.syllables %}
+            <td class="text-center">{{s}}</td>
+        {% endfor %}
+    </tr>
+    <tr>
+        <th>LG Marks</th>
+        {% for lg_mark in line_result.lg %}
+            <td class="text-center">{{lg_mark}}</td>
+        {% endfor %}
+    </tr>
+    {% if line_result.gana == line_result.display_gana %}
+    <tr>
+        <th>Gana</th>
+        {% set counter = namespace(gana_idx=0, written_count=0, colspan=0, letters=0) %}
+        {% for lg_mark in line_result.lg %}
+            {% set counter.colspan = counter.colspan + 1 %}
+            {% if counter.written_count + 3 > line_result.length%}
+                <td class="text-center">{{lg_mark}}</td>
+            {% endif %}
+            {% if lg_mark %}
+                {% set counter.letters = counter.letters + 1 %}
+                {% if counter.letters == 3 %}
+                    <td class="text-center" colspan="{{counter.colspan}}">{{line_result.gana[counter.gana_idx]}}</td>
+                    {% set counter.gana_idx = counter.gana_idx + 1 %}
+                    {% set counter.colspan = 0 %}
+                    {% set counter.letters = 0 %}
+                    {% set counter.written_count = counter.written_count + 3 %}
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+        {% if counter.letters %}
+        <!-- td class="text-center" colspan="{{counter.colspan}}">{{line_result.gana[counter.gana_idx]}}</td -->
+        {% endif %}
+    </tr>
+    {% else %}
+    <tr>
+        <th>Gana</th>
+        <td colspan="{{line_result.lg | length}}">{{line_result.display_gana}}</td>
+    </tr>
+    {% endif %}
+    <tr>
+        <th>Counts</th>
+        <td colspan="{{line_result.lg | length}}">
+            {{line_result.display_length}} अक्षराणि, {{line_result.matra}} मात्राः
+        </td>
+    </tr>
+    <tr>
+        <th>Jaati</th>
+        <td colspan="{{line_result.lg | length}}">
+            {% if line_result.jaati %}
+            {{line_result.jaati[0]}}
+            {% else %}
+            Unknown
+            {% endif %}
+        </td>
+    </tr>
+    <tr>
+        <th>Chanda</th>
+        <td colspan="{{line_result.lg | length}}">
+        {% if line_result.found %}
+            {{' / '.join(line_result.chanda)}}
+        {% else %}
+            Unknown <button data-toggle="collapse" data-target="#fuzzy-{{line_id}}" class="btn btn-sm btn-outline-secondary float-right" onclick="toggle_fuzzy()">Fuzzy</button>
+        {% endif %}
+        </td>
+    </tr>
+    {% if not line_result.found %}
+    <table id="fuzzy-{{line_id}}" class="collapse table table-sm table-bordered table-striped mx-auto">
+        <tr>
+            <th class="text-center" colspan="4">
+                Fuzzy Matches
+            </th>
+        </tr>
+        <tr>
+            <th>
+                #
+            </th>
+            <th>
+                Chanda
+            </th>
+            <th>
+                Gana
+            </th>
+            <th>
+                Cost
+            </th>
+        </tr>
+        {% for fuzzy_result in line_result.fuzzy %}
+        <tr>
+            <td rowspan="2">
+                {{loop.index}}
+            </td>
+            <td>
+                {{' / '.join(fuzzy_result[0])}}
+            </td>
+            <td>
+                {{fuzzy_result[1]}}
+            </td>
+            <td>
+                {{fuzzy_result[3]}}
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                {{fuzzy_result[2]}}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% endif %}
+</table>
+{% else %}
+<div class="alert alert-warning">Unable to resolve.</div>
+{% endif %}
