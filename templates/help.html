@@ -31,9 +31,12 @@
             <h5 class="card-title">How to use the <b>chanda</b> identification system?</h5>
             <p class="card-text">
                 The identification system can identify <b>chanda</b> from <b>saṃskṛta</b> text in <i>Devanagari</i>.
-                A single <b>pada</b> can be provided in the <a href="{{url_for('identify_line')}}">Line</a> tab, while
-                multiple lines (one <b>pada</b> on each line) can be provided in the <a
-                    href="{{url_for('identify_from_text')}}">Text</a> tab.
+                <b>Chanda</b> can be identified in two modes.
+
+                <ol>
+                    <li>Treat all the lines independently. (<code>Line Mode</code>)</li>
+                    <li>Treat the lines as a set of verses. (<code>Verse Mode</code>)</li>
+                </ol>
 
                 The system in addition to identifying the <b>chanda</b> from the provided verses, is also capable of
                 suggestiong most-likely matches (<i>fuzzy matches</i>), in case a direct match could not be found.
@@ -229,6 +232,42 @@
                 The <b>laghu</b>-<b>guru</b> string for the given line is compared with the known <b>chanda</b> signatures,
                 and ranked according to their edit-distance. Backtracing is used to predict which operations are
                 required to reach the target string.
+            </p>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">How do I provide input?</h5>
+            <p class="card-text">
+                There are three primary modes of providing input.
+                <ol>
+                    <li><b>Text:</b> Type or copy-paste input in plain text format using <a href="{{url_for('identify_from_text')}}">Text</a> tab.</li>
+                    <li><b>Image:</b> Upload images containing text using <a href="{{url_for('identify_from_image')}}">Image</a> tab.</li>
+                    <li><b>File:</b> Upload text files using <a href="{{url_for('identify_from_file')}}">File</a> tab.</li>
+                </ol>
+            </p>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Can I provide input in a different transliteration scheme?</h5>
+            <p class="card-text">
+                Yes!
+            </p>
+            <p class="card-text">
+                Transliteration support is powered by the fantastic <a href="https://pypi.org/project/indic-transliteration/"><code>indic-transliteration</code></a> library.
+                <br>
+                Therefore, any scheme supported by this library can be used to provide input. Further, this also applies for all input types.
+                i.e., Images or files uploaded can also contain text in any supported transliteration scheme. This includes
+                all promient schemes of <a href="https://en.wikipedia.org/wiki/Devanagari_transliteration">Devanagari transliteration</a>.
+                It also includes all prominent Indian language scripts, such as, Bangla, Telugu, Tamil, Malayalam, Gujarati and many more.
+                <br>
+                As a result, if the language of choice shares follows Sanskrit <b>Chandaśāstra</b> one can even provide input in the script
+                of that language (e.g., Telugu) and the system will work seemlessly.
+            </p>
+            <p class="card-text">
+                The output, by default, will be displayed using the scheme that input follows. However, this
+                can be controlled and the output can be displayed using multiple transliteration schemes.
             </p>
         </div>
     </div>

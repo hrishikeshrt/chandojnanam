@@ -1,30 +1,32 @@
 {% if line_result %}
+{% set output_scheme = data.output_scheme or line_result.display_scheme %}
+
 <table class="table table-sm table-bordered table-striped mx-auto">
     <tr>
-        <th>Letters</th>
-        {% for s in line_result.syllables %}
-            <td class="text-center">{{s}}</td>
+        <th>Akṣarāṇi</th>
+        {% for s in line_result.display_syllables %}
+            <td class="text-center">{{s | transliterate(output_scheme)}}</td>
         {% endfor %}
     </tr>
     <tr>
-        <th>LG Marks</th>
-        {% for lg_mark in line_result.lg %}
-            <td class="text-center">{{lg_mark}}</td>
+        <th>Laghu-Guru</th>
+        {% for lg_mark in line_result.display_lg %}
+            <td class="text-center">{{lg_mark | transliterate(output_scheme)}}</td>
         {% endfor %}
     </tr>
     {% if line_result.gana == line_result.display_gana %}
     <tr>
-        <th>Gana</th>
+        <th>Gaṇa</th>
         {% set counter = namespace(gana_idx=0, written_count=0, colspan=0, letters=0) %}
         {% for lg_mark in line_result.lg %}
             {% set counter.colspan = counter.colspan + 1 %}
             {% if counter.written_count + 3 > line_result.length%}
-                <td class="text-center">{{lg_mark}}</td>
+                <td class="text-center">{{lg_mark | transliterate(output_scheme)}}</td>
             {% endif %}
             {% if lg_mark %}
                 {% set counter.letters = counter.letters + 1 %}
                 {% if counter.letters == 3 %}
-                    <td class="text-center" colspan="{{counter.colspan}}">{{line_result.gana[counter.gana_idx]}}</td>
+                    <td class="text-center" colspan="{{counter.colspan}}">{{line_result.gana[counter.gana_idx] | transliterate(output_scheme)}}</td>
                     {% set counter.gana_idx = counter.gana_idx + 1 %}
                     {% set counter.colspan = 0 %}
                     {% set counter.letters = 0 %}
@@ -38,40 +40,50 @@
     </tr>
     {% else %}
     <tr>
-        <th>Gana</th>
-        <td colspan="{{line_result.lg | length}}">{{line_result.display_gana}}</td>
+        <th>Gaṇa</th>
+        <td colspan="{{line_result.lg | length}}">{{line_result.display_gana | transliterate(output_scheme)}}</td>
     </tr>
     {% endif %}
     <tr>
         <th>Counts</th>
         <td colspan="{{line_result.lg | length}}">
-            {{line_result.display_length}} अक्षराणि, {{line_result.matra}} मात्राः
+            {% if output_scheme and output_scheme not in ["devanagari", "iast", "slp1", "wx", "hk", "itrans"] %}
+                {% set string_syllables = "syllables" %}
+                {% set string_morae = "morae" %}
+            {% else %}
+                {% set string_syllables = "अक्षराणि" | transliterate(output_scheme) %}
+                {% set string_morae = "मात्राः" | transliterate(output_scheme) %}
+            {% endif %}
+            {{line_result.display_length}} {{string_syllables}}, {{line_result.display_matra}} {{string_morae}}
         </td>
     </tr>
     <tr>
-        <th>Jaati</th>
+        <th>Jāti</th>
         <td colspan="{{line_result.lg | length}}">
-            {% if line_result.jaati %}
-            {{line_result.jaati[0]}}
-            {% else %}
-            Unknown
-            {% endif %}
+            {{line_result.display_jaati | transliterate(output_scheme)}}
         </td>
     </tr>
     <tr>
         <th>Chanda</th>
         <td colspan="{{line_result.lg | length}}">
         {% if line_result.found %}
-            {{' / '.join(line_result.chanda)}}
+            {{line_result.display_chanda | transliterate(output_scheme)}}
         {% else %}
-            Unknown <button data-toggle="collapse" data-target="#fuzzy-{{line_id}}" class="btn btn-sm btn-outline-secondary float-right" onclick="toggle_fuzzy()">Fuzzy</button>
+        {% if line_result.fuzzy %}
+            <span class="text-secondary">
+                {{line_result.fuzzy[0]["display_chanda"] | transliterate(output_scheme)}} ({{line_result.fuzzy[0]["cost"]}} {% if line_result.fuzzy[0]["cost"] == 1 %}edit{% else %}edits{% endif %})
+            </span>
+            <button data-toggle="collapse" data-target="#fuzzy-{{line_id}}" data-custom-toggle-text="- Fuzzy" data-custom-default-class="btn-info" data-custom-toggle-class="btn-secondary" class="btn btn-sm btn-info float-right">+ Fuzzy</button>
+        {% else %}
+            <span class="text-danger">not found</span>
+        {% endif %}
         {% endif %}
         </td>
     </tr>
     {% if not line_result.found %}
     <table id="fuzzy-{{line_id}}" class="collapse table table-sm table-bordered table-striped mx-auto">
         <tr>
-            <th class="text-center" colspan="4">
+            <th class="text-center" colspan="5">
                 Fuzzy Matches
             </th>
         </tr>
@@ -83,10 +95,13 @@
                 Chanda
             </th>
             <th>
-                Gana
+                Gaṇa
             </th>
             <th>
                 Cost
+            </th>
+            <th>
+                Similarity
             </th>
         </tr>
         {% for fuzzy_result in line_result.fuzzy %}
@@ -95,18 +110,21 @@
                 {{loop.index}}
             </td>
             <td>
-                {{' / '.join(fuzzy_result[0])}}
+                {{fuzzy_result["display_chanda"] | transliterate(output_scheme) }}
             </td>
             <td>
-                {{fuzzy_result[1]}}
+                {{fuzzy_result["gana"] | transliterate(output_scheme)}}
             </td>
             <td>
-                {{fuzzy_result[3]}}
+                {{fuzzy_result["cost"]}}
+            </td>
+            <td>
+                {{(fuzzy_result["similarity"] * 100) | round(1)}}
             </td>
         </tr>
         <tr>
             <td colspan="3">
-                {{fuzzy_result[2]}}
+                {{ fuzzy_result["suggestion"] | string | transliterate(output_scheme)}}
             </td>
         </tr>
         {% endfor %}
@@ -114,5 +132,5 @@
     {% endif %}
 </table>
 {% else %}
-<div class="alert alert-warning">Unable to resolve.</div>
+<div class="alert alert-warning">Something went wrong.</div>
 {% endif %}

@@ -1,0 +1,17 @@
+{% set active_page = "text" -%}
+{% include "header.html" %}
+    <div class="container px-3 pt-3 lead">
+        <form method=POST enctype=multipart/form-data action="{{ url_for('identify_from_text') }}">
+            {% include "output_scheme_selector.html" %}
+            <div class="form-group">
+                <label for="input_text">Input text</label>
+                <textarea class="form-control" rows="4" id="input_text" name="input_text" placeholder="Enter the text to identify">{% if 'text' in data %}{{data.text}}{% endif %}</textarea>
+            </div>
+            <button type="submit" class="btn btn-primary float-right">Identify</button>
+            {% include "text_mode_selector.html" %}
+        </form>
+    </div>
+    <div class="container px-3 pb-3 lead">
+        {% include "result.html" %}
+    </div>
+{% include "footer.html" %}

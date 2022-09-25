@@ -22,7 +22,7 @@ from indic_transliteration import sanscript
 from indic_transliteration.detect import detect
 from indic_transliteration.sanscript import transliterate
 
-import samskrit_text as skt
+import sanskrit_text as skt
 
 # size of LRU cache
 MAX_CACHE = 1024
@@ -127,16 +127,16 @@ class Chanda:
 
         return gana_str
 
-    def gana_to_lg(self, gana_str):
+    def gana_to_lg(self, gana_str: str) -> str:
         """Transform Gana string into Laghu-Guru string"""
         return gana_str.translate(str.maketrans(self.gana))
 
     # ----------------------------------------------------------------------- #
 
-    def count_matra(self, gana_str):
+    def count_matra(self, gana_str: str) -> int:
         """Count matra from a Gana or Laghu-Guru string"""
         lg_str = self.gana_to_lg(gana_str)
-        return sum([1 if x == self.L else 2 for x in lg_str])
+        return lg_str.count(self.L) + lg_str.count(self.G) * 2
 
     ###########################################################################
 
@@ -158,7 +158,7 @@ class Chanda:
                     continue
                 letter_count = int(row[0].strip())
                 names = [c.strip() for c in row[1].split(',')]
-                jaati[letter_count] = names
+                jaati[letter_count] = tuple(names)
 
         self.JAATI.update(jaati)
         return jaati
@@ -193,8 +193,12 @@ class Chanda:
                 if not row[0].strip():
                     continue
 
-                names = tuple([c.strip() for c in row[0].split(',')])
+                # `meters` is a tuple since we need it to be hashable
+                # for use as a key in the dictionary `chanda_pada`
+                names = tuple(c.strip() for c in row[0].split(','))
                 pada = row[1].strip()
+                # meters = ((chanda, pada), ...)
+                meters = tuple((c, (pada,)) for c in names)
                 lakshana = ''.join(row[2].split())
                 lakshana = lakshana.translate(self.ttable_in)
                 lakshana = self.gana_to_lg(lakshana)
@@ -203,13 +207,12 @@ class Chanda:
                 )
                 if pada:
                     chanda_pada[names][pada] = lakshana
-                    names = tuple([f'{name} (पाद {pada})' for name in names])
                 else:
                     chanda_pada[names]['1'] = lakshana
                     chanda_pada[names]['2'] = lakshana
 
                 if lakshana:
-                    chanda[lakshana].extend(names)
+                    chanda[lakshana].extend(meters)
 
         for _chanda_names, _pada_lakshana in chanda_pada.items():
             multi_pada = []
@@ -217,20 +220,24 @@ class Chanda:
             for _pada, _lakshana in _pada_lakshana.items():
                 multi_pada.append(_pada)
                 multi_lakshana.append(_lakshana)
+
                 if len(multi_pada) == 2:
-                    names = tuple([
-                        f'{name} (पाद {multi_pada[0]}-{multi_pada[-1]})'
-                        for name in _chanda_names
-                    ])
+                    names = tuple(
+                        (_name, tuple(multi_pada)) for _name in _chanda_names
+                    )
                     multi_chanda[''.join(multi_lakshana)].extend(names)
                     splits[''.join(multi_lakshana)].append(multi_lakshana)
+
                     multi_pada = []
                     multi_lakshana = []
 
-        self.SINGLE_CHANDA.update(chanda)
-        self.MULTI_CHANDA.update(multi_chanda)
-        self.CHANDA.update(chanda)
-        self.CHANDA.update(multi_chanda)
+        for k, v in chanda.items():
+            self.SINGLE_CHANDA[k].extend(v)
+            self.CHANDA[k].extend(v)
+        for k, v in multi_chanda.items():
+            self.MULTI_CHANDA[k].extend(v)
+            self.CHANDA[k].extend(v)
+
         self.SPLITS.update(splits)
         return chanda
 
@@ -264,10 +271,10 @@ class Chanda:
             devanagari_text = text
         lines = []
         for line in skt.split_lines(devanagari_text):
-            clean_line = skt.clean(line)
+            clean_line = skt.clean(line).strip()
             if clean_line:
                 lines.append(clean_line)
-        return lines
+        return lines, scheme
 
     ###########################################################################
 
@@ -285,6 +292,11 @@ class Chanda:
         lg_signature = self.gana_to_lg(signature)
         lg_str = ''.join(lg_marks)
         ops = Lev.editops(lg_str, lg_signature)
+
+        if not ops:
+            # exact match
+            return 0, []
+
         distance = len(ops)
 
         # weights can be decided by an external agent
@@ -388,28 +400,35 @@ class Chanda:
         jaati = []
         gana = []
         length = []
+        matra = []
         if not multi:
             if found:
                 chanda += self.SINGLE_CHANDA.get(lg_str)
             jaati = self.JAATI.get(len(lg_str), self.JAATI[-1])
             gana = [self.lg_to_gana(lg_str)]
             length = [str(len(lg_str))]
+            matra = [str(self.count_matra(lg_str))]
         else:
             if found:
                 chanda = self.MULTI_CHANDA.get(lg_str)
+                # display properties, bit misplaced
                 jaati = [
-                    "(" + ', '.join([
+                    "(" + ', '.join(
                         ' / '.join(self.JAATI.get(len(split), self.JAATI[-1]))
                         for split in splits
-                    ]) + ")"
+                    ) + ")"
                     for splits in self.SPLITS.get(lg_str)
                 ]
                 gana = [
-                    f"({', '.join([self.lg_to_gana(s) for s in splits])})"
+                    f"({', '.join(self.lg_to_gana(s) for s in splits)})"
                     for splits in self.SPLITS.get(lg_str)
                 ]
                 length = [
-                    f"({' + '.join([str(len(s)) for s in splits])})"
+                    f"({' + '.join(str(len(s)) for s in splits)})"
+                    for splits in self.SPLITS.get(lg_str)
+                ]
+                matra = [
+                    f"({' + '.join(str(self.count_matra(s)) for s in splits)})"
                     for splits in self.SPLITS.get(lg_str)
                 ]
 
@@ -420,35 +439,104 @@ class Chanda:
             'gana': gana,
             'chanda': chanda,
             'jaati': jaati,
-            'length': length
+            'length': length,
+            'matra': matra
         }
         return match
 
     ###########################################################################
 
-    def identify_from_text(self, text, fuzzy=False):
+    def identify_from_text(self, text, verse=False, fuzzy=False):
         """
-        TODO: Identify using other lines
-        Consider their fuzzy matches too
+        Identify meters from text
+
+        If `verse` is True, treat the input as collection of verses.
+        NOTE: Currently assumes 4 lines per verse.
+        TODO: Add support for 2 lines per verse too. (i.e. 2 pada in same line)
         """
-        answer = []
-        lines = self.process_text(text)
+        line_results = []
+        verse_results = []
+
+        lines, scheme = self.process_text(text)
 
         for line in lines:
-            clean_line = skt.clean(line).strip()
-            if not clean_line:
+            if not line:
                 continue
-
-            answer.append({
+            original_line = transliterate(line, sanscript.DEVANAGARI, scheme)
+            line_results.append({
                 'line': line,
-                'result': self.identify_line(line, fuzzy=fuzzy)
+                'result': self.identify_line(original_line, fuzzy=fuzzy)
             })
 
-        return answer
+        if verse:
+            verse_result = {
+                'chanda': None,
+                'scheme': scheme,
+                'scores': [],
+                'lines': []
+            }
+
+            line_count = 0
+            ongoing_score = Counter()
+
+            for line_idx, line_result in enumerate(line_results):
+                _result = line_result['result']
+                if _result['found']:
+                    _chanda = _result['chanda']
+                    _unique_chanda = list(dict(_chanda))
+                    for _c in _unique_chanda:
+                        ongoing_score[_c] += 1
+                    # TODO:
+                    # If the exact match is by accident, other matches don't
+                    # get a score. Decide if we want to calculate fuzzy matches
+                    # irrespective of an exact match or not.
+                else:
+                    for fuzzy_match in _result['fuzzy']:
+                        _chanda = fuzzy_match['chanda']
+                        _unique_chanda = list(dict(_chanda))
+                        for _c in _unique_chanda:
+                            ongoing_score[_c] += fuzzy_match['similarity']
+
+                verse_result['lines'].append(line_idx)
+                line_count += 1
+                if line_count % 4 == 0 or line_idx == len(line_results) - 1:
+                    verse_scores = ongoing_score.most_common()
+                    best_score = verse_scores[0][1]
+                    best_matches = ([
+                        _c
+                        for _c, _score in verse_scores if _score == best_score
+                    ], best_score)
+                    verse_result['scores'] = verse_scores
+                    verse_result['chanda'] = best_matches
+                    for _line_idx in verse_result['lines']:
+                        line_result = line_results[_line_idx]
+                        priority_fuzzy = []
+                        existing_fuzzy = line_result['result']['fuzzy']
+                        for idx, fuzzy_match in enumerate(existing_fuzzy):
+                            if any([
+                                (x in best_matches[0])
+                                for x in [c[0] for c in fuzzy_match['chanda']]
+                            ]):
+                                priority_fuzzy.append(existing_fuzzy.pop(idx))
+                        line_result['result']['fuzzy'] = (
+                            priority_fuzzy + existing_fuzzy
+                        )
+
+                    verse_results.append(verse_result)
+                    # reset
+                    verse_result = {
+                        'chanda': None,
+                        'scheme': scheme,
+                        'scores': [],
+                        'lines': []
+                    }
+                    ongoing_score = Counter()
+
+        return line_results, verse_results
 
     # ----------------------------------------------------------------------- #
 
-    def identify_line(self, line, fuzzy=False):
+    def identify_line(self, line, fuzzy=False, k=10):
         """
         Identify Chanda if possible from a single text line
 
@@ -457,7 +545,10 @@ class Chanda:
             - matra: number of matras in the line
             - answer: dictionary containing various details about the line
         """
-        lines = self.process_text(line)
+
+        lines, scheme = self.process_text(line)
+        output_scheme = scheme if scheme != sanscript.DEVANAGARI else None
+
         if len(lines) > 1:
             raise ValueError('Input contains more than one line.')
         line = lines[0]
@@ -468,33 +559,36 @@ class Chanda:
         multi_match = self.find_direct_match(line, multi=True)
 
         if direct_match is None:
+            # lg_str is empty
             return answer
 
         found = direct_match['found'] or multi_match['found']
 
         lg_str = ''.join(direct_match['lg'])
         regex_matches = [k for k in self.CHANDA if re.match(f'^{k}$', lg_str)]
+
         if regex_matches:
             found = True
         is_regex_match = bool(regex_matches)
-
-        matra = self.count_matra(lg_str)
 
         chanda = []
         jaati = []
         gana = []
         length = []
+        matra = []
         if found:
             if direct_match['found']:
                 chanda += direct_match['chanda']
                 jaati += direct_match['jaati']
                 gana += direct_match['gana']
                 length += direct_match['length']
+                matra += direct_match['matra']
             if multi_match['found']:
                 chanda += multi_match['chanda']
                 jaati += multi_match['jaati']
                 gana += multi_match['gana']
                 length += multi_match['length']
+                matra += multi_match['matra']
 
             if is_regex_match:
                 chanda += [
@@ -504,115 +598,197 @@ class Chanda:
                     if c not in chanda
                 ]
 
-        answer['found'] = found
-        answer['syllables'] = direct_match['syllables']
-        answer['lg'] = [self.output_map.get(c, c) for c in direct_match['lg']]
-        answer['gana'] = self.lg_to_gana(lg_str).translate(self.ttable_out)
-        answer['display_gana'] = (
+        full_lg = [self.output_map.get(c, c) for c in direct_match['lg']]
+        full_length = len(lg_str)
+        full_matra = self.count_matra(lg_str)
+        full_gana = self.lg_to_gana(lg_str).translate(self.ttable_out)
+        full_jaati = self.JAATI.get(len(lg_str), self.JAATI[-1])
+
+        # display properties
+        display_line = line
+        display_syllables = direct_match['syllables']
+        display_lg = full_lg
+        display_gana = (
             ' / '.join(gana).translate(self.ttable_out)
             if gana else
-            answer['gana']
+            full_gana
         )
-        answer['length'] = len(lg_str)
-        answer['display_length'] = (
-            ' / '.join(length) if length else answer['length']
+        display_length = ' / '.join(length) if length else full_length
+        display_matra = ' / '.join(matra) if matra else full_matra
+        display_chanda = ' / '.join(
+            self.format_chanda_pada(c, p) for c, p in chanda
         )
-        answer['matra'] = matra
+        display_jaati = ' / '.join(
+            jaati if jaati else full_jaati
+        )
+
+        answer['found'] = found
+        answer['syllables'] = direct_match['syllables']
+        answer['lg'] = full_lg
+        answer['gana'] = full_gana
+        answer['length'] = full_length
+        answer['matra'] = full_matra
         answer['chanda'] = chanda
         answer['jaati'] = jaati
+
+        answer['display_scheme'] = output_scheme
+        answer['display_line'] = display_line
+        answer['display_syllables'] = display_syllables
+        answer['display_lg'] = display_lg
+        answer['display_gana'] = display_gana
+        answer['display_length'] = display_length
+        answer['display_matra'] = display_matra
+        answer['display_chanda'] = display_chanda
+        answer['display_jaati'] = display_jaati
+
         answer['fuzzy'] = []
 
         if not found and fuzzy:
-            for chanda_lg in self.CHANDA:
+            for chanda_lg, chanda_names in self.CHANDA.items():
                 chanda_gana = self.lg_to_gana(chanda_lg)
                 cost, suggestion = self.transform(line, chanda_lg)
+                similarity = (1 - cost / len(chanda_lg))
                 if suggestion:
                     output = ', '.join([s for ln in suggestion
                                         for w in ln for s in w])
                     output = suggestion
-                    answer['fuzzy'].append(
-                        (self.CHANDA[chanda_lg],
-                         chanda_gana.translate(self.ttable_out),
-                         output,
-                         cost)
+                    _display_chanda = ' / '.join(
+                        self.format_chanda_pada(c, p) for c, p in chanda_names
                     )
-            answer['fuzzy'] = sorted(answer['fuzzy'], key=lambda x: x[3])[:5]
+                    answer['fuzzy'].append(
+                        {
+                            "chanda": chanda_names,
+                            "gana": chanda_gana.translate(self.ttable_out),
+                            "suggestion": output,
+                            "cost": cost,
+                            "similarity": similarity,
+                            "display_chanda": _display_chanda
+                        }
+                    )
+            answer['fuzzy'] = sorted(
+                answer['fuzzy'],
+                key=lambda x: x["similarity"],
+                reverse=True
+            )[:k]
         return answer
 
     ###########################################################################
 
-    def analyse(self, file, fuzzy=True, remove_chars=''):
-        """
-        Analyses a file and identify Chanda from each line.
+    def summarize_results(self, line_results, verse_results):
+        match_line_statistics = defaultdict(Counter)
+        fuzzy_line_statistics = defaultdict(Counter)
+        verse_statistics = defaultdict(Counter)
+        for line_answer in line_results:
+            line_result = line_answer['result']
+            if line_result['found']:
+                chanda_list = line_result['display_chanda'].split('/')
+                gana_list = line_result['display_gana'].split('/')
 
-        @params:
-            file: path of the input file
-            remove_chars: characters to be removed
-
-        skt.clean() is called after removing remove_chars.
-        Lines are identified using the skt.split_lines() function.
-        """
-        with open(file, 'r') as f:
-            content = f.read().translate(str.maketrans('', '', remove_chars))
-
-        analysis = [
-            (line, self.identify_line(line, fuzzy=fuzzy))
-            for line in self.process_text(content)
-        ]
-
-        hit = 0
-        unk = 0
-        content = []
-        fuzzy_freq = Counter()
-        chanda_freq = Counter()
-        jaati_freq = Counter()
-        gana_freq = Counter()
-        matra_freq = Counter()
-        for line, line_analysis in analysis:
-            if not line_analysis:
-                continue
-            print([line, line_analysis])
-
-            line_chanda = line_analysis['chanda']
-            line_jaati = line_analysis['jaati']
-            line_gana = line_analysis['gana']
-            line_matra = line_analysis['matra']
-
-            hit += line_analysis['found']
-            unk += not(line_analysis['found'])
-
-            matra_freq.update([line_matra])
-            if line_chanda:
-                line_desc = ' / '.join(line_chanda)
-                chanda_freq.update(line_chanda)
+                match_line_statistics['chanda'].update(chanda_list)
+                match_line_statistics['gana'].update(gana_list)
             else:
-                line_desc = line_gana
-                gana_freq.update([line_gana])
+                for fuzzy_match in line_result['fuzzy']:
+                    chanda_list = fuzzy_match['display_chanda'].split('/')
+                    fuzzy_line_statistics['chanda'].update(chanda_list)
+                    break
 
-            if fuzzy and line_analysis['fuzzy']:
-                line_fuzzy = line_analysis['fuzzy'][0][0]
-                fuzzy_freq.update(line_fuzzy)
+        for verse_result in verse_results:
+            pass
 
-            jaati_freq.update(line_jaati)
-
-            content.append(f"{line_matra:<6}: {line_desc:<20}: {line}")
-
-        with open(f'{file}.chanda', 'w') as f:
-            f.write('\n'.join(content))
-
-        with open(f'{file}.analysis', 'w') as f:
-            json.dump(analysis, f, ensure_ascii=False, indent=2)
-
-        result = {
-            'hit': hit,
-            'unk': unk,
-            'chanda_freq': chanda_freq,
-            'fuzzy_freq': fuzzy_freq,
-            'matra_freq': matra_freq,
-            'jaati_freq': jaati_freq,
-            'gana_freq': gana_freq,
+        return {
+            'line': {
+                'fuzzy': fuzzy_line_statistics,
+                'match': match_line_statistics,
+            },
+            'verse': verse_statistics
         }
-        return result
 
+    # def analyse_file(self, file, fuzzy=True, remove_chars=''):
+    #     """
+    #     Analyses a file and identify Chanda from each line.
+
+    #     @params:
+    #         file: path of the input file
+    #         remove_chars: characters to be removed
+
+    #     `skt.clean()` is called after removing remove_chars.
+    #     Lines are identified using the `skt.split_lines()` function.
+    #     """
+    #     with open(file, 'r') as f:
+    #         content = f.read().translate(str.maketrans('', '', remove_chars))
+
+    #     line_results, verse_results = self.identify_from_text(
+    #         content,
+    #         verse=True,
+    #         fuzzy=True
+    #     )
+
+    #     hit = 0
+    #     unk = 0
+    #     content = []
+    #     fuzzy_freq = Counter()
+    #     chanda_freq = Counter()
+    #     jaati_freq = Counter()
+    #     gana_freq = Counter()
+    #     matra_freq = Counter()
+    #     statistics = defaultdict(Counter)
+
+    #     for line_answer in line_results:
+    #         line_result = line_answer['result']
+
+    #         line_chanda = line_result['chanda']
+    #         line_jaati = line_result['jaati']
+    #         line_gana = line_result['gana']
+    #         line_matra = line_result['matra']
+
+    #         hit += line_result['found']
+    #         unk += not(line_result['found'])
+
+    #         matra_freq.update([line_matra])
+    #         if line_chanda:
+    #             line_desc = ' / '.join(line_chanda)
+    #             chanda_freq.update(line_chanda)
+    #         else:
+    #             line_desc = line_gana
+    #             gana_freq.update([line_gana])
+
+    #         if fuzzy and line_result['fuzzy']:
+    #             line_fuzzy = line_result['fuzzy'][0][0]
+    #             fuzzy_freq.update(line_fuzzy)
+
+    #         jaati_freq.update(line_jaati)
+
+    #         content.append(
+    #             f"{line_matra:<6}: {line_desc:<20}: {line_answer['line']}"
+    #         )
+
+    #     with open(f'{file}.chanda', 'w') as f:
+    #         f.write('\n'.join(content))
+
+    #     with open(f'{file}.analysis', 'w') as f:
+    #         json.dump(statistics, f, ensure_ascii=False, indent=2)
+
+    #     result = {
+    #         'hit': hit,
+    #         'unk': unk,
+    #         'chanda_freq': chanda_freq,
+    #         'fuzzy_freq': fuzzy_freq,
+    #         'matra_freq': matra_freq,
+    #         'jaati_freq': jaati_freq,
+    #         'gana_freq': gana_freq,
+    #     }
+    #     return result
+
+    ###########################################################################
+    # Formatters
+
+    @staticmethod
+    def format_chanda_pada(chanda: str, pada: tuple) -> str:
+        if len(pada) == 1:
+            return f"{chanda} (पाद {pada[0]})" if pada[0] else chanda
+        if len(pada) == 2:
+            return f"{chanda} (पाद {pada[0]}-{pada[1]})"
+
+    ###########################################################################
 
 ###############################################################################

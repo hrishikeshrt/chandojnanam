@@ -1,0 +1,7 @@
+Flask>=2.2.2
+Flask_Uploads>=0.2.1
+google_drive_ocr>=0.2.6
+indic_transliteration>=2.3.10
+pytesseract>=0.3.9
+python_Levenshtein>=0.12.2
+sanskrit_text>=0.2.1

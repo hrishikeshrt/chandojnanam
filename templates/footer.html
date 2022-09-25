@@ -1,6 +1,7 @@
         <!-- Include all compiled plugins (below), or include individual files as needed -->
         <script src="{{url_for('static', filename='js/popper.min.js')}}"></script>
         <script src="{{url_for('static', filename='bootstrap/js/bootstrap.min.js')}}"></script>
+        <script src="{{url_for('static', filename='plugins/js/bootstrap-select.min.js')}}"></script>
 
         <script src="{{url_for('static', filename='plugins/bs-custom-file-input.min.js')}}"></script>
         <footer class="footer">
@@ -14,6 +15,56 @@
         <script>
             $(function () {
                 $('[data-toggle="tooltip"]').tooltip();
+            });
+            $('.selectpicker').selectpicker();
+        </script>
+        <!-- Custom Toggle Style -->
+        <script>
+            $('[data-custom-toggle-text]').each(function() {
+                const $toggle = $(this);
+                const original_text = $toggle.text();
+                const original_class = $toggle.data('custom-default-class');
+                $toggle.addClass(original_class);
+                const toggle_text = $toggle.data('custom-toggle-text');
+                const toggle_class = $toggle.data('custom-toggle-class');
+                const $target = $($toggle.data('target'));
+
+                $target.on('show.bs.collapse hide.bs.collapse', function(e) {
+                    if (e.target == e.delegateTarget) {
+                        if ($toggle.text() == original_text) {
+                            $toggle.text(toggle_text);
+                            $toggle.removeClass(original_class);
+                            $toggle.addClass(toggle_class);
+                        } else {
+                            $toggle.text(original_text);
+                            $toggle.addClass(original_class);
+                            $toggle.removeClass(toggle_class);
+                        }
+                    }
+                });
+            });
+            $('[data-custom-multi-toggle-text]').each(function() {
+                const $toggle = $(this);
+                const original_text = $toggle.text();
+                const original_class = $toggle.data('custom-default-class');
+                $toggle.addClass(original_class);
+                const toggle_text = $toggle.data('custom-multi-toggle-text');
+                const toggle_class = $toggle.data('custom-multi-toggle-class');
+                const $target = $($toggle.data('target'));
+
+                $target.on('show.bs.collapse', function(e) {
+                    if (e.target == e.delegateTarget) {
+                        if ($toggle.text() == original_text) {
+                            $toggle.text(toggle_text);
+                            $toggle.removeClass(original_class);
+                            $toggle.addClass(toggle_class);
+                        } else {
+                            $toggle.text(original_text);
+                            $toggle.addClass(original_class);
+                            $toggle.removeClass(toggle_class);
+                        }
+                    }
+                });
             });
         </script>
         <!-- Bootstrap-Notify -->

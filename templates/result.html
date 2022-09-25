@@ -1,0 +1,63 @@
+{% if data.line_result or data.verse_result %}
+<hr>
+<div class="pb-3">
+    Results
+    <button class="work-in-progress btn btn-secondary float-right" title="Download Results JSON">
+        <i class="fa fa-download"></i>
+    </button>
+    <button class="work-in-progress btn btn-secondary float-right mx-1" title="Download Results TXT">
+        <i class="fas fa-file-lines"></i>
+    </button>
+    <button class="work-in-progress btn btn-secondary float-right" title="View Summary">
+        <i class="fas fa-chart-simple"></i>
+    </button>
+</div>
+<script>
+    $('.work-in-progress').click(function() {
+        $.notify({
+            message: "The feature will be enabled soon."
+        }, {
+            type: "warning"
+        });
+    });
+</script>
+
+{% endif %}
+{% if data.text_mode == "verse" %}
+    {% for verse_result in data.verse_result %}
+    {% set verse_loop = loop %}
+    {% set verse_id = verse_loop.index %}
+    {% set output_scheme = data.output_scheme or verse_result.scheme %}
+    <div class="card mb-1">
+        <div class="card-header">
+            {{verse_id}}. {{" / ".join(verse_result['chanda'][0]) | transliterate(output_scheme)}}
+            <button data-toggle="collapse" data-target=".multi-collapse-{{verse_id}}" aria-controls="verse-lines-{{verse_id}} verse-scansion-{{verse_id}}" data-custom-multi-toggle-text="Hide Scansion" data-custom-default-class="btn-info" data-custom-multi-toggle-class="btn-secondary" class="btn btn-sm float-right">Show Scansion</button>
+        </div>
+        <div id="verse-lines-{{verse_id}}" class="card-body collapse show multi-collapse-{{verse_id}}">
+            {% for line_idx in verse_result['lines'] %}
+            {% set line_answer = data.line_result[line_idx] %}
+            {% set line_text = line_answer.line %}
+            {{line_text | transliterate(output_scheme)}}
+            <br>
+            {% endfor %}
+        </div>
+        <div id="verse-scansion-{{verse_id}}" class="card-body p-0 m-0 collapse multi-collapse-{{verse_id}}">
+            {% for line_idx in verse_result['lines'] %}
+                {% set line_answer = data.line_result[line_idx] %}
+                {% set line_text = line_answer.line %}
+                {% set line_id = loop.index %}
+                {% set line_result = line_answer.result %}
+                {% include "line_result.html" %}
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+{% endif %}
+{% if data.text_mode == "line" %}
+    {% for line_answer in data.line_result %}
+        {% set line_text = line_answer.line %}
+        {% set line_id = loop.index %}
+        {% set line_result = line_answer.result %}
+        {% include "line_result.html" %}
+    {% endfor %}
+{% endif %}

@@ -12,6 +12,10 @@
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="{{url_for('static', filename='js/jquery.js')}}"></script>
 
+    <!-- Latest compiled and minified CSS -->
+    <!-- link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/css/bootstrap-select.min.css" -->
+    <link rel="stylesheet" href="{{url_for('static', filename='plugins/css/bootstrap-select.min.css')}}">
+
     <!-- Animations for Bootstrap-Notify -->
     <link rel="stylesheet" href="{{url_for('static', filename='plugins/css/animate.min.css')}}">
 
@@ -21,6 +25,18 @@
 
     <script src="{{url_for('static', filename='plugins/bs-custom-file-input.min.js')}}"></script>
 
+    <!-- Google Font -->
+    <!--
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Devanagari" rel="stylesheet">
+
+    <style>
+        .sanskrit {
+            font-family: 'Noto Serif Devanagari', serif;
+        }
+    </style>
+    -->
     <!-- Google Tag Manager -->
     <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
     new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -35,8 +51,7 @@
     <!-- End Google Tag Manager (noscript) -->
     {% set navigation_bar = {
         'about': ('home', 'About'),
-        'line': ('identify_line', 'Line'),
-        'verse': ('identify_from_text', 'Verse'),
+        'text': ('identify_from_text', 'Text'),
         'image': ('identify_from_image', 'Image'),
         'file': ('identify_from_file', 'File'),
         'examples': ('show_examples', 'Examples'),

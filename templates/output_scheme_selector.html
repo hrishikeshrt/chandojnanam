@@ -1,0 +1,10 @@
+<div class="form-group my-1 float-right">
+    <label for="output_scheme">Output Scheme: </label>
+    <select name="output_scheme" data-live-search="true" id="output_scheme" class="selectpicker">
+        {% for scheme_name, scheme_display_name in available_schemes %}
+        <option value="{{scheme_name}}" {% if data.output_scheme == scheme_name %}selected{% endif %}>
+            {{scheme_display_name}}
+        </option>
+        {% endfor %}
+    </select>
+</div>

@@ -1,11 +1,8 @@
 {% set active_page = "file" -%}
 {% include "header.html" %}
-    <div class="container p-3 lead">
-        <div class="alert alert-danger text-center" role="alert">
-        Caution: This interface is a work in undergoing changes.
-        </div>
-
+    <div class="container px-3 pt-3 lead">
         <form method=POST enctype=multipart/form-data action="{{ url_for('identify_from_file') }}">
+            {% include "output_scheme_selector.html" %}
             <div class="input-group my-4">
                 <div class="input-group-prepend">
                     <span class="input-group-text" id="file_upload">Upload</span>
@@ -15,31 +12,16 @@
                     <label class="custom-file-label" for="text_file">Choose text file</label>
                 </div>
             </div>
-            <div class="form-group">
-                <div class="custom-control custom-radio custom-control-inline">
-                    <input class="custom-control-input" type="radio" name="output-type" id="output-type-compact" value="compact" checked>
-                    <label class="custom-control-label" for="output-type-compact">Compact TXT Output</label>
-                </div>
-                <div class="custom-control custom-radio custom-control-inline">
-                    <input class="custom-control-input" type="radio" name="output-type" id="output-type-detailed" value="detailed">
-                    <label class="custom-control-label" for="output-type-detailed">Detailed JSON Output</label>
-                </div>
-            </div>
-            <button type="submit" class="btn btn-primary">Analyse</button>
+            <button type="submit" class="btn btn-primary float-right">Analyse</button>
+            {% include "text_mode_selector.html" %}
         </form>
         <script>
         $(document).ready(function () {
             bsCustomFileInput.init();
         })
         </script>
-
-        <hr>
     </div>
-    {% if 'result' in data %}
-    <div class="container p-3 lead">
-        <pre class="pre-scrollable">
-        {{data.result}}
-        </pre>
+    <div class="container px-3 pb-3 lead">
+        {% include "result.html" %}
     </div>
-    {% endif %}
 {% include "footer.html" %}

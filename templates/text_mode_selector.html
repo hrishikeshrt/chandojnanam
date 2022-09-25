@@ -1,0 +1,8 @@
+<div class="form-group">
+    {% for text_mode, label  in text_modes %}
+    <div class="custom-control custom-radio custom-control-inline">
+        <input class="custom-control-input" type="radio" name="text_mode" id="text-mode-{{text_mode}}" value="{{text_mode}}" {% if data.text_mode == text_mode %}checked{% endif %}>
+        <label class="custom-control-label" for="text-mode-{{text_mode}}">{{label}}</label>
+    </div>
+    {% endfor %}
+</div>

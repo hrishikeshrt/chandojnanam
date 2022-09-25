@@ -6,7 +6,6 @@ Created on Mon Sep 16 16:11:35 2019
 @author: Hrishikesh Terdalkar
 """
 
-import json
 import datetime
 
 from flask import Flask, request, render_template, flash  # , url_for, redirect
@@ -16,6 +15,7 @@ from flask_uploads import (
 
 import pytesseract
 from google_drive_ocr import GoogleOCRApplication
+from indic_transliteration import sanscript
 
 import chanda
 from settings import (
@@ -28,12 +28,15 @@ from settings import (
 
 Chanda = chanda.Chanda(DATA_PATH)
 
+# --------------------------------------------------------------------------- #
 # Upload Paths
 TMP_PATH.mkdir(parents=True, exist_ok=True)
 PHOTOS_PATH = TMP_PATH
 TEXTS_PATH = TMP_PATH
 
-# OCR
+# --------------------------------------------------------------------------- #
+# OCR Instance
+
 GoogleOCR = GoogleOCRApplication(
     client_secret=CLIENT_SECRET,
     temporary_upload=True
@@ -62,23 +65,66 @@ patch_request_class(webapp, 5 * 1024 * 1024)  # Limit: 5 megabytes
 def inject_global_constants():
     return {
         'now': datetime.datetime.utcnow(),
+        'available_schemes': [
+            ("", "Match Input"),
+            ("devanagari", "Devanagari"),
+            ("iast", "IAST"),
+            ("itrans", "ITRANS"),
+            ("hk", "Harvard-Kyoto"),
+            ("wx", "WX"),
+            ("slp1", "SLP1"),
+            ("assamese", "Assamese"),
+            ("bengali", "Bangla"),
+            ("gujarati", "Gujarati"),
+            ("kannada", "Kannada"),
+            ("malayalam", "Malayalam"),
+            ("oriya", "Oriya"),
+            ("tamil", "Tamil"),
+            ("telugu", "Telugu"),
+        ],
+        'text_modes': [
+            ("verse", "Verse Mode"),
+            ("line", "Line Mode")
+        ]
     }
 
 
-@webapp.route('/line', methods=['GET', 'POST'], strict_slashes=False)
-def identify_line():
+@webapp.template_filter('transliterate')
+def transliterate_filter(text, scheme):
+    if scheme is not None and scheme != sanscript.DEVANAGARI:
+        return sanscript.transliterate(text, sanscript.DEVANAGARI, scheme)
+    return text
+
+
+###############################################################################
+
+
+@webapp.route('/text', methods=['GET', 'POST'], strict_slashes=False)
+def identify_from_text():
     data = {}
-    data['title'] = 'Identify from Line'
+    data['title'] = 'Identify from Text'
+    data['text_mode'] = 'line'
+
     if request.method == 'POST':
         data['text'] = request.form['input_text']
+        data['output_scheme'] = request.form.get('output_scheme', None)
+        data['text_mode'] = request.form.get('text_mode', 'line')
+        verse_mode = data['text_mode'] == "verse"
+
         webapp.logger.info(f"INPUT: {data['text']}")
         try:
-            result = Chanda.identify_line(data['text'], fuzzy=True)
-            data['result'] = result
+            line_result, verse_result = Chanda.identify_from_text(
+                data['text'],
+                verse=verse_mode,
+                fuzzy=True
+            )
+            data['line_result'] = line_result
+            data['verse_result'] = verse_result
         except Exception as e:
-            flash(str(e))
-        # data['result'] = json.dumps(result, ensure_ascii=False, indent=2)
-    return render_template('line.html', data=data)
+            flash(f"Something went wrong. ({e})")
+            webapp.logger.exception(str(e))
+
+    return render_template('text.html', data=data)
 
 
 @webapp.route('/image', methods=['GET', 'POST'], strict_slashes=False)
@@ -90,11 +136,20 @@ def identify_from_image():
         'tesseract': 'Tesseract OCR'
     }
     data['engine'] = 'tesseract'
+    data['text_mode'] = 'line'
 
     if request.method == 'POST':
         data['text'] = request.form.get('input_text', '')
+        data['output_scheme'] = request.form.get('output_scheme', None)
+        data['text_mode'] = request.form.get('text_mode', 'line')
+        verse_mode = data['text_mode'] == "verse"
 
-        if request.files['image_file'].filename:
+        image_data = request.form.get('image_data')
+        if image_data:
+            data['image'] = image_data
+
+        image_file = request.files.get('image_file')
+        if image_file and image_file.filename:
             filename = photos.save(request.files['image_file'])
             filepath = PHOTOS_PATH / filename
 
@@ -127,11 +182,17 @@ def identify_from_image():
 
         webapp.logger.info(f"INPUT: {data['text']}")
         try:
-            result = Chanda.identify_from_text(data['text'], fuzzy=True)
-            data['result'] = result
+            line_result, verse_result = Chanda.identify_from_text(
+                data['text'],
+                verse=verse_mode,
+                fuzzy=True
+            )
+            data['line_result'] = line_result
+            data['verse_result'] = verse_result
         except Exception as e:
-            flash(str(e))
-        # data['result'] = json.dumps(result, ensure_ascii=False, indent=2)
+            flash(f"Something went wrong. ({e})")
+            webapp.logger.exception(str(e))
+
     return render_template('image_file.html', data=data)
 
 
@@ -139,36 +200,37 @@ def identify_from_image():
 def identify_from_file():
     data = {}
     data['title'] = 'Identify from Verse'
+    data['text_mode'] = 'line'
+
     if request.method == 'POST':
         data['text'] = request.form.get('input_text', '')
+        data['output_scheme'] = request.form.get('output_scheme', None)
+        data['text_mode'] = request.form.get('text_mode', 'line')
+        verse_mode = data['text_mode'] == "verse"
 
         if request.files['text_file'].filename:
             filename = texts.save(request.files['text_file'])
             filepath = TEXTS_PATH / filename
+
+            with open(filepath, "r", encoding="utf-8") as f:
+                data['text'] = f.read()
+
+            webapp.logger.info(f"INPUT: {data['text']}")
             try:
-                result = Chanda.analyse(filepath, fuzzy=True)
-                data['result'] = json.dumps(result, indent=True, ensure_ascii=False)
+                line_result, verse_result = Chanda.identify_from_text(
+                    data['text'],
+                    verse=verse_mode,
+                    fuzzy=True
+                )
+                data['line_result'] = line_result
+                data['verse_result'] = verse_result
             except Exception as e:
-                flash(str(e))
+                flash(f"Something went wrong. ({e})")
+                webapp.logger.exception(str(e))
         else:
             flash("Please select a text file to analyse.")
+
     return render_template('text_file.html', data=data)
-
-
-@webapp.route('/verse', methods=['GET', 'POST'], strict_slashes=False)
-def identify_from_text():
-    data = {}
-    data['title'] = 'Identify from Verse'
-    if request.method == 'POST':
-        data['text'] = request.form['input_text']
-        webapp.logger.info(f"INPUT: {data['text']}")
-        try:
-            result = Chanda.identify_from_text(data['text'], fuzzy=True)
-            data['result'] = result
-        except Exception as e:
-            flash(str(e))
-        # data['result'] = json.dumps(result, ensure_ascii=False, indent=2)
-    return render_template('verse.html', data=data)
 
 
 @webapp.route('/', strict_slashes=False)
