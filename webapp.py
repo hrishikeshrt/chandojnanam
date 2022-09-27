@@ -7,6 +7,7 @@ Created on Mon Sep 16 16:11:35 2019
 """
 
 import datetime
+from re import TEMPLATE
 
 from flask import Flask, request, render_template, flash  # , url_for, redirect
 from flask_uploads import (
@@ -20,7 +21,7 @@ from indic_transliteration import sanscript
 import chanda
 from settings import (
     DATA_PATH, TMP_PATH,
-    APPLICATION_NAME, SECRET_KEY,
+    APPLICATION_NAME, TEMPLATE_PATH, STATIC_PATH, SECRET_KEY,
     CLIENT_SECRET
 )
 
@@ -45,8 +46,8 @@ GoogleOCR = GoogleOCRApplication(
 ###############################################################################
 
 webapp = Flask(APPLICATION_NAME,
-               template_folder='templates',
-               static_folder='static')
+               template_folder=TEMPLATE_PATH,
+               static_folder=STATIC_PATH)
 webapp.secret_key = SECRET_KEY
 
 webapp.config['UPLOADED_PHOTOS_DEST'] = str(PHOTOS_PATH)
