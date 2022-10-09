@@ -691,29 +691,44 @@ class Chanda:
         match_line_statistics = defaultdict(Counter)
         fuzzy_line_statistics = defaultdict(Counter)
         verse_statistics = defaultdict(Counter)
+
+        counts = defaultdict(int)
+
         for line_answer in line_results:
+            counts['line'] += 1
             line_result = line_answer['result']
             if line_result['found']:
+                counts['match_line'] += 1
                 chanda_list = line_result['display_chanda'].split('/')
                 gana_list = line_result['display_gana'].split('/')
 
                 match_line_statistics['chanda'].update(chanda_list)
                 match_line_statistics['gana'].update(gana_list)
             else:
-                for fuzzy_match in line_result['fuzzy']:
+                counts['fuzzy_line'] += 1
+                for idx, fuzzy_match in enumerate(line_result['fuzzy']):
+                    if idx == 0:
+                        counts['mismatch_syllable'] += fuzzy_match['cost']
                     chanda_list = fuzzy_match['display_chanda'].split('/')
                     fuzzy_line_statistics['chanda'].update(chanda_list)
                     break
 
         for verse_result in verse_results:
-            pass
+            counts['verse'] += 1
+            chanda_list, chanda_score = verse_result['chanda']
+            if chanda_score == len(verse_result['lines']):
+                counts['match_verse'] += 1
+            else:
+                counts['fuzzy_verse'] += 1
+            verse_statistics['chanda'].update(chanda_list)
 
         return {
             'line': {
                 'fuzzy': fuzzy_line_statistics,
                 'match': match_line_statistics,
             },
-            'verse': verse_statistics
+            'verse': verse_statistics,
+            'count': counts
         }
 
     # def analyse_file(self, file, fuzzy=True, remove_chars=''):
