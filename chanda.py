@@ -446,7 +446,9 @@ class Chanda:
 
     ###########################################################################
 
-    def identify_from_text(self, text, verse=False, fuzzy=False):
+    def identify_from_text(
+        self, text, verse=False, fuzzy=False, save_path=None
+    ):
         """
         Identify meters from text
 
@@ -531,6 +533,17 @@ class Chanda:
                         'lines': []
                     }
                     ongoing_score = Counter()
+
+        if save_path is not None:
+            os.makedirs(save_path, exist_ok=True)
+            line_result_path = os.path.join(save_path, "line_result.json")
+            verse_result_path = os.path.join(save_path, "verse_result.json")
+
+            with open(line_result_path, "w") as f:
+                json.dump(line_results, f, ensure_ascii=False)
+
+            with open(verse_result_path, "w") as f:
+                json.dump(verse_results, f, ensure_ascii=False)
 
         return line_results, verse_results
 
