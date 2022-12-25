@@ -7,7 +7,6 @@ Created on Mon Sep 16 16:11:35 2019
 """
 
 import datetime
-from re import TEMPLATE
 
 from flask import Flask, request, render_template, flash  # , url_for, redirect
 from flask_uploads import (
@@ -18,16 +17,16 @@ import pytesseract
 from google_drive_ocr import GoogleOCRApplication
 from indic_transliteration import sanscript
 
-import chanda
+from chanda import Chanda
 from settings import (
-    DATA_PATH, TMP_PATH,
-    APPLICATION_NAME, TEMPLATE_PATH, STATIC_PATH, SECRET_KEY,
-    CLIENT_SECRET
+    APPLICATION_NAME, SECRET_KEY,
+    TEMPLATE_PATH, STATIC_PATH,
+    DATA_PATH, TMP_PATH, CLIENT_SECRET
 )
 
 ###############################################################################
 
-Chanda = chanda.Chanda(DATA_PATH)
+CHANDA = Chanda(DATA_PATH)
 
 # --------------------------------------------------------------------------- #
 # Upload Paths
@@ -114,7 +113,7 @@ def identify_from_text():
 
         webapp.logger.info(f"INPUT: {data['text']}")
         try:
-            line_result, verse_result = Chanda.identify_from_text(
+            line_result, verse_result = CHANDA.identify_from_text(
                 data['text'],
                 verse=verse_mode,
                 fuzzy=True
@@ -183,7 +182,7 @@ def identify_from_image():
 
         webapp.logger.info(f"INPUT: {data['text']}")
         try:
-            line_result, verse_result = Chanda.identify_from_text(
+            line_result, verse_result = CHANDA.identify_from_text(
                 data['text'],
                 verse=verse_mode,
                 fuzzy=True
@@ -218,7 +217,7 @@ def identify_from_file():
 
             webapp.logger.info(f"INPUT: {data['text']}")
             try:
-                line_result, verse_result = Chanda.identify_from_text(
+                line_result, verse_result = CHANDA.identify_from_text(
                     data['text'],
                     verse=verse_mode,
                     fuzzy=True
@@ -253,7 +252,7 @@ def show_help():
 def show_examples():
     data = {}
     data['title'] = 'Examples'
-    data['examples'] = Chanda.read_examples()
+    data['examples'] = CHANDA.read_examples()
     return render_template('examples.html', data=data)
 
 ###############################################################################
