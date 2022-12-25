@@ -171,7 +171,7 @@ def identify_from_image():
                 with open(output_path, "r", encoding="utf-8") as f:
                     data['text'] = f.read()
             if ocr_engine == 'tesseract':
-                tesseract_config = '-l san'
+                tesseract_config = '-l san+mar+hin+ben+tel+guj+tam+mal+kan'
                 data['text'] = pytesseract.image_to_string(
                     str(filepath),
                     config=tesseract_config
