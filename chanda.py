@@ -12,6 +12,7 @@ import os
 import re
 import csv
 import json
+import hashlib
 import functools
 
 from collections import defaultdict, Counter
@@ -534,18 +535,29 @@ class Chanda:
                     }
                     ongoing_score = Counter()
 
+        results = {
+            'line': line_results,
+            'verse': verse_results
+        }
+
         if save_path is not None:
+            md5sum = hashlib.md5(text.encode('utf-8')).hexdigest()
+
             os.makedirs(save_path, exist_ok=True)
-            line_result_path = os.path.join(save_path, "line_result.json")
-            verse_result_path = os.path.join(save_path, "verse_result.json")
+            result_filename = f"{md5sum}_result.json"
+            result_path = os.path.join(save_path, result_filename)
 
-            with open(line_result_path, "w") as f:
-                json.dump(line_results, f, ensure_ascii=False)
+            with open(result_path, "w") as f:
+                json.dump(results, f, ensure_ascii=False)
+        else:
+            md5sum = None
+            result_filename = None
+            result_path = None
 
-            with open(verse_result_path, "w") as f:
-                json.dump(verse_results, f, ensure_ascii=False)
-
-        return line_results, verse_results
+        return {
+            'result': results,
+            'path': result_filename
+        }
 
     # ----------------------------------------------------------------------- #
 
@@ -687,7 +699,10 @@ class Chanda:
 
     ###########################################################################
 
-    def summarize_results(self, line_results, verse_results):
+    def summarize_results(self, results):
+        line_results = results['line']
+        verse_results = results['verse']
+
         match_line_statistics = defaultdict(Counter)
         fuzzy_line_statistics = defaultdict(Counter)
         verse_statistics = defaultdict(Counter)
