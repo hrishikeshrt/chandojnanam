@@ -8,7 +8,10 @@ Created on Mon Sep 16 16:11:35 2019
 
 import datetime
 
-from flask import Flask, request, render_template, flash  # , url_for, redirect
+from flask import (
+    Flask, request, render_template, flash,  # , url_for, redirect,
+    send_from_directory
+)
 from flask_uploads import (
     UploadSet, IMAGES, TEXT, configure_uploads, patch_request_class
 )
@@ -30,9 +33,18 @@ CHANDA = Chanda(DATA_PATH)
 
 # --------------------------------------------------------------------------- #
 # Upload Paths
+
+PHOTOS_PATH = TMP_PATH / "photos"
+TEXTS_PATH = TMP_PATH / "texts"
+
+# Result Path
+RESULTS_PATH = TMP_PATH / "results"
+
+# Create Paths
 TMP_PATH.mkdir(parents=True, exist_ok=True)
-PHOTOS_PATH = TMP_PATH
-TEXTS_PATH = TMP_PATH
+PHOTOS_PATH.mkdir(parents=True, exist_ok=True)
+TEXTS_PATH.mkdir(parents=True, exist_ok=True)
+RESULTS_PATH.mkdir(parents=True, exist_ok=True)
 
 # --------------------------------------------------------------------------- #
 # OCR Instance
@@ -237,6 +249,11 @@ def identify_from_file():
             flash("Please select a text file to analyse.")
 
     return render_template('text_file.html', data=data)
+
+
+@webapp.route('/download/<string:filename>')
+def download_result(filename):
+    return send_from_directory(RESULTS_PATH, filename)
 
 
 @webapp.route('/', strict_slashes=False)

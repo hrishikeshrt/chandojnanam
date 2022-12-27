@@ -2,7 +2,7 @@
 <hr>
 <div class="pb-3">
     Results
-    <button class="work-in-progress btn btn-secondary float-right" title="Download Results JSON">
+    <button id="download-json" class="btn btn-secondary float-right" title="Download Results JSON">
         <i class="fa fa-download"></i>
     </button>
     <button class="work-in-progress btn btn-secondary float-right mx-1" title="Download Results TXT">
@@ -19,6 +19,15 @@
         }, {
             type: "warning"
         });
+    });
+    $("#download-json").click(function(e) {
+        e.preventDefault();
+        const tmp_link = document.createElement('a');
+        document.body.appendChild(tmp_link);
+        tmp_link.href = "{{url_for('download_result', filename=data.result_path)}}";
+        tmp_link.download = "{{data.result_path}}";
+        tmp_link.click();
+        tmp_link.remove();
     });
 </script>
 
