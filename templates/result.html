@@ -1,4 +1,4 @@
-{% if data.line_result or data.verse_result %}
+{% if data.result.line or data.result.verse %}
 <hr>
 <div class="pb-3">
     Results
@@ -24,7 +24,7 @@
 
 {% endif %}
 {% if data.text_mode == "verse" %}
-    {% for verse_result in data.verse_result %}
+    {% for verse_result in data.result.verse %}
     {% set verse_loop = loop %}
     {% set verse_id = verse_loop.index %}
     {% set output_scheme = data.output_scheme or verse_result.scheme %}
@@ -35,7 +35,7 @@
         </div>
         <div id="verse-lines-{{verse_id}}" class="card-body collapse show multi-collapse-{{verse_id}}">
             {% for line_idx in verse_result['lines'] %}
-            {% set line_answer = data.line_result[line_idx] %}
+            {% set line_answer = data.result.line[line_idx] %}
             {% set line_text = line_answer.line %}
             {{line_text | transliterate(output_scheme)}}
             <br>
@@ -43,7 +43,7 @@
         </div>
         <div id="verse-scansion-{{verse_id}}" class="card-body p-0 m-0 collapse multi-collapse-{{verse_id}}">
             {% for line_idx in verse_result['lines'] %}
-                {% set line_answer = data.line_result[line_idx] %}
+                {% set line_answer = data.result.line[line_idx] %}
                 {% set line_text = line_answer.line %}
                 {% set line_id = loop.index %}
                 {% set line_result = line_answer.result %}
@@ -54,7 +54,7 @@
     {% endfor %}
 {% endif %}
 {% if data.text_mode == "line" %}
-    {% for line_answer in data.line_result %}
+    {% for line_answer in data.result.line %}
         {% set line_text = line_answer.line %}
         {% set line_id = loop.index %}
         {% set line_result = line_answer.result %}

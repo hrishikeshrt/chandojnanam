@@ -113,13 +113,15 @@ def identify_from_text():
 
         webapp.logger.info(f"INPUT: {data['text']}")
         try:
-            line_result, verse_result = CHANDA.identify_from_text(
+            answer = CHANDA.identify_from_text(
                 data['text'],
                 verse=verse_mode,
-                fuzzy=True
+                fuzzy=True,
+                save_path=RESULTS_PATH
             )
-            data['line_result'] = line_result
-            data['verse_result'] = verse_result
+            data['result'] = answer['result']
+            data['result_path'] = answer['path']
+            data['summary'] = CHANDA.summarize_results(data['result'])
         except Exception as e:
             flash(f"Something went wrong. ({e})")
             webapp.logger.exception(str(e))
@@ -182,13 +184,15 @@ def identify_from_image():
 
         webapp.logger.info(f"INPUT: {data['text']}")
         try:
-            line_result, verse_result = CHANDA.identify_from_text(
+            answer = CHANDA.identify_from_text(
                 data['text'],
                 verse=verse_mode,
-                fuzzy=True
+                fuzzy=True,
+                save_path=RESULTS_PATH
             )
-            data['line_result'] = line_result
-            data['verse_result'] = verse_result
+            data['result'] = answer['result']
+            data['result_path'] = answer['path']
+            data['summary'] = CHANDA.summarize_results(data['result'])
         except Exception as e:
             flash(f"Something went wrong. ({e})")
             webapp.logger.exception(str(e))
@@ -217,13 +221,15 @@ def identify_from_file():
 
             webapp.logger.info(f"INPUT: {data['text']}")
             try:
-                line_result, verse_result = CHANDA.identify_from_text(
+                answer = CHANDA.identify_from_text(
                     data['text'],
                     verse=verse_mode,
-                    fuzzy=True
+                    fuzzy=True,
+                    save_path=RESULTS_PATH
                 )
-                data['line_result'] = line_result
-                data['verse_result'] = verse_result
+                data['result'] = answer['result']
+                data['result_path'] = answer['path']
+                data['summary'] = CHANDA.summarize_results(data['result'])
             except Exception as e:
                 flash(f"Something went wrong. ({e})")
                 webapp.logger.exception(str(e))
