@@ -8,7 +8,7 @@
     <button class="work-in-progress btn btn-secondary float-right mx-1" title="Download Results TXT">
         <i class="fas fa-file-lines"></i>
     </button>
-    <button class="work-in-progress btn btn-secondary float-right" title="View Summary">
+    <button class="btn btn-secondary float-right" title="View Summary" data-toggle="modal" data-target="#result-summary-modal">
         <i class="fas fa-chart-simple"></i>
     </button>
 </div>
@@ -61,3 +61,4 @@
         {% include "line_result.html" %}
     {% endfor %}
 {% endif %}
+{% include "result_summary.html" %}
