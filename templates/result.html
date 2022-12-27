@@ -5,19 +5,26 @@
     <button id="download-json" class="btn btn-secondary float-right" title="Download Results JSON">
         <i class="fa fa-download"></i>
     </button>
-    <button class="work-in-progress btn btn-secondary float-right mx-1" title="Download Results TXT">
+    <button id="download-txt" class="coming-soon btn btn-secondary float-right mx-1" title="Download Results TXT">
         <i class="fas fa-file-lines"></i>
     </button>
-    <button class="btn btn-secondary float-right" title="View Summary" data-toggle="modal" data-target="#result-summary-modal">
+    <button class="work-in-progress btn btn-secondary float-right" title="View Summary" data-toggle="modal" data-target="#result-summary-modal">
         <i class="fas fa-chart-simple"></i>
     </button>
 </div>
 <script>
     $('.work-in-progress').click(function() {
         $.notify({
-            message: "The feature will be enabled soon."
+            message: "The feature is still work in progress."
         }, {
             type: "warning"
+        });
+    });
+    $('.coming-soon').click(function() {
+        $.notify({
+            message: "The feature will be enabled soon."
+        }, {
+            type: "danger"
         });
     });
     $("#download-json").click(function(e) {
