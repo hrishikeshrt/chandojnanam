@@ -540,23 +540,53 @@ class Chanda:
             'verse': verse_results
         }
 
+        simple_result = []
+        if verse:
+            for verse_result in verse_results:
+                best_matches = " / ".join(verse_result['chanda'][0])
+                best_score = verse_result['chanda'][1]
+                simple_result.append(f"# {best_matches} ({best_score})")
+                simple_result.append("")
+                for line_id in verse_result['lines']:
+                    line_result = line_results[line_id]
+                    simple_result.append(
+                        self.format_line_result(line_result['result'])
+                    )
+                simple_result.append("")
+        else:
+            for line_result in line_results:
+                simple_result.append(
+                    self.format_line_result(line_result['result'])
+                )
+                simple_result.append("")
+
         if save_path is not None:
-            md5sum = hashlib.md5(text.encode('utf-8')).hexdigest()
-
             os.makedirs(save_path, exist_ok=True)
-            result_filename = f"{md5sum}_result.json"
-            result_path = os.path.join(save_path, result_filename)
 
-            with open(result_path, "w") as f:
+            md5sum = hashlib.md5(text.encode('utf-8')).hexdigest()
+            result_id = f"result_{md5sum}_{int(verse)}_{int(fuzzy)}"
+
+            json_filename = f"{result_id}.json"
+            json_path = os.path.join(save_path, json_filename)
+            with open(json_path, mode="w", encoding="utf-8") as f:
                 json.dump(results, f, ensure_ascii=False)
+
+            txt_filename = f"{result_id}.txt"
+            txt_path = os.path.join(save_path, txt_filename)
+            with open(txt_path, mode="w", encoding="utf-8") as f:
+                f.write("\n".join(simple_result))
         else:
             md5sum = None
-            result_filename = None
-            result_path = None
+            json_filename = None
+            txt_filename = None
 
+        paths = {
+            'json': json_filename,
+            'txt': txt_filename
+        }
         return {
             'result': results,
-            'path': result_filename
+            'path': paths
         }
 
     # ----------------------------------------------------------------------- #
@@ -566,9 +596,9 @@ class Chanda:
         Identify Chanda if possible from a single text line
 
         @return:
-            - found: boolean indicating if the Chanda was found or not
-            - matra: number of matras in the line
-            - answer: dictionary containing various details about the line
+            - answer: dictionary containing scansion details about the line
+                - found: boolean indicating if the Chanda was found or not
+                - ...
         """
 
         lines, scheme = self.process_text(line)
