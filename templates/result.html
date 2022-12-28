@@ -6,7 +6,7 @@
     <button id="download-json" class="btn btn-secondary float-right" title="Download Results JSON">
         <i class="fa fa-download"></i>
     </button>
-    <button id="download-txt" class="coming-soon btn btn-secondary float-right mx-1" title="Download Results TXT">
+    <button id="download-txt" class="btn btn-secondary float-right mx-1" title="Download Results TXT">
         <i class="fas fa-file-lines"></i>
     </button>
     <button class="work-in-progress btn btn-secondary float-right" title="View Summary" data-toggle="modal" data-target="#result-summary-modal">
@@ -21,21 +21,21 @@
             type: "warning"
         });
     });
-    $('.coming-soon').click(function() {
-        $.notify({
-            message: "The feature will be enabled soon."
-        }, {
-            type: "danger"
-        });
-    });
-    $("#download-json").click(function(e) {
-        e.preventDefault();
+    function download_file(file_link) {
         const tmp_link = document.createElement('a');
         document.body.appendChild(tmp_link);
-        tmp_link.href = "{{url_for('download_result', filename=data.result_path)}}";
-        tmp_link.download = "{{data.result_path}}";
+        tmp_link.href = file_link;
+        tmp_link.download = true;
         tmp_link.click();
         tmp_link.remove();
+    }
+    $("#download-json").click(function(e) {
+        e.preventDefault();
+        download_file("{{url_for('download_result', filename=data.result_path.json)}}");
+    });
+    $("#download-txt").click(function(e) {
+        e.preventDefault();
+        download_file("{{url_for('download_result', filename=data.result_path.txt)}}");
     });
 </script>
 
