@@ -1,3 +1,4 @@
+{% if data.result %}
 {% if data.result.line or data.result.verse %}
 <hr>
 <div class="pb-3">
@@ -78,3 +79,4 @@
     {% endfor %}
 {% endif %}
 {% include "result_summary.html" %}
+{% endif %}
