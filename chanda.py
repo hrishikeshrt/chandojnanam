@@ -768,11 +768,11 @@ class Chanda:
             verse_statistics['chanda'].update(chanda_list)
 
         return {
+            'verse': verse_statistics,
             'line': {
                 'fuzzy': fuzzy_line_statistics,
                 'match': match_line_statistics,
             },
-            'verse': verse_statistics,
             'count': counts
         }
 
