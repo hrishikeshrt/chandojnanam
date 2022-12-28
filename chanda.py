@@ -832,6 +832,27 @@ class Chanda:
         if len(pada) == 2:
             return f"{chanda} (पाद {pada[0]}-{pada[1]})"
 
+    @staticmethod
+    def format_line_result(line_result) -> str:
+        output_lines = [
+            line_result['display_line'],
+            f"\tSyllables: {line_result['display_syllables']}",
+            f"\tLG: {line_result['display_lg']}",
+            f"\tGana: {line_result['display_gana']}",
+            (f"\tCounts: {line_result['display_length']} letters, "
+                f"{line_result['display_matra']} morae"),
+            f"\tChanda: {line_result['display_chanda']}",
+            f"\tJaati: {line_result['display_jaati']} "
+        ]
+        if line_result['fuzzy']:
+            best_match = line_result['fuzzy'][0]
+            output_lines.extend([
+                (f"\tFuzzy: {best_match['display_chanda']} "
+                 f"({best_match['similarity']})"),
+                f"\t\t{best_match['suggestion']}"
+            ])
+        return "\n".join(output_lines)
+
     ###########################################################################
 
 ###############################################################################
