@@ -138,6 +138,7 @@ def identify_from_text():
             data['result'] = answer['result']
             data['result_path'] = answer['path']
             data['summary'] = CHANDA.summarize_results(data['result'])
+            data['summary_pretty'] = CHANDA.format_summary(data['summary'])
         except Exception as e:
             flash(f"Something went wrong. ({e})")
             webapp.logger.exception(str(e))
