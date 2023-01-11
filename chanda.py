@@ -883,6 +883,59 @@ class Chanda:
             ])
         return "\n".join(output_lines)
 
+    @staticmethod
+    def format_summary(result_summary) -> str:
+        output = []
+        if result_summary["verse"]:
+            output.extend([
+                "Verse Statistics",
+                "----------------"
+            ])
+            for idx, (chanda_name, chanda_count) in enumerate(
+                result_summary["verse"]["chanda"].most_common(),
+                start=1
+            ):
+                output.append(f"{idx:>4}. {chanda_name}: {chanda_count}")
+            output.append("")
+
+        output.extend([
+            "Line Statistics",
+            "---------------"
+        ])
+
+        if result_summary["line"]["match"]:
+            output.append("-- Exact Match")
+            for idx, (chanda_name, chanda_count) in enumerate(
+                result_summary["line"]["match"]["chanda"].most_common(),
+                start=1
+            ):
+                output.append(f"{idx:>4}. {chanda_name}: {chanda_count}")
+            output.append("")
+
+        if result_summary["line"]["fuzzy"]:
+            output.append("-- Fuzzy Match")
+            for idx, (chanda_name, chanda_count) in enumerate(
+                result_summary["line"]["fuzzy"]["chanda"].most_common(),
+                start=1
+            ):
+                output.append(f"{idx:>4}. {chanda_name}: {chanda_count}")
+            output.append("")
+
+        counts = result_summary["count"]
+        output.extend([
+            "Counts",
+            "------",
+            f"* Total Lines: {counts['line']}",
+            f"  - Exact Match: {counts['match_line']}",
+            f"  - Fuzzy Match: {counts['fuzzy_line']}",
+            f"* Total Verses: {counts['verse']}",
+            f"  - Exact Match: {counts['match_verse']}",
+            f"  - Fuzzy Match: {counts['fuzzy_verse']}",
+            f"* Total Syllables Mismatched: {counts['mismatch_syllable']}",
+        ])
+
+        return "\n".join(output)
+
     ###########################################################################
 
 ###############################################################################
