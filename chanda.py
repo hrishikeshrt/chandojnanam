@@ -448,7 +448,7 @@ class Chanda:
     ###########################################################################
 
     def identify_from_text(
-        self, text, verse=False, fuzzy=False, save_path=None
+        self, text, verse=False, fuzzy=False, save_path=None, scheme=None
     ):
         """
         Identify meters from text
@@ -460,7 +460,9 @@ class Chanda:
         line_results = []
         verse_results = []
 
-        lines, scheme = self.process_text(text)
+        lines, _scheme = self.process_text(text)
+        if scheme is None:
+            scheme = _scheme
 
         for line in lines:
             if not line:

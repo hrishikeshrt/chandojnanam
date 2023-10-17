@@ -205,7 +205,8 @@ def identify_from_image():
                 data['text'],
                 verse=verse_mode,
                 fuzzy=True,
-                save_path=RESULTS_PATH
+                save_path=RESULTS_PATH,
+                scheme=data['output_scheme']
             )
             data['result'] = answer['result']
             data['result_path'] = answer['path']
@@ -242,7 +243,8 @@ def identify_from_file():
                     data['text'],
                     verse=verse_mode,
                     fuzzy=True,
-                    save_path=RESULTS_PATH
+                    save_path=RESULTS_PATH,
+                    scheme=data['output_scheme']
                 )
                 data['result'] = answer['result']
                 data['result_path'] = answer['path']
