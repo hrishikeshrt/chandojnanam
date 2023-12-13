@@ -461,7 +461,7 @@ class Chanda:
         verse_results = []
 
         lines, _scheme = self.process_text(text)
-        if scheme is None:
+        if not scheme:
             scheme = _scheme
 
         for line in lines:
