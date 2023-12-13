@@ -10,10 +10,29 @@
         {% for line in example %}
             <br>{{line}}
         {% endfor %}
+        <form class="float-right" action="{{url_for('identify_from_text')}}" method="POST">
+            <input type="hidden" name="input_text" id="example-{{loop.index}}" value="{{example | join('\n')}}">
+            <button type="submit" title="Try" class="btn btn-outline-secondary mx-1" data-action="run" data-target="#example-{{loop.index}}">
+                <i class="fa fa-play"></i>
+            </button>
+        </form>
+        <button title="Copy" class="btn btn-outline-secondary float-right" data-action="copy" data-target="#example-{{loop.index}}">
+            <i class="fa fa-copy"></i>
+        </button>
     </div>
     {% if loop.index % 2 == 0 %}
     </div>
     {% endif %}
     {% endfor %}
 </div>
+<script>
+    $("[data-action='copy']").click(function () {
+        const target_selector = $(this).data("target");
+        const target_text = $(target_selector).val();
+        $.notify({
+            "message": "Copied text to clipboard!"
+        });
+        navigator.clipboard.writeText(target_text);
+    });
+</script>
 {% include "footer.html" %}
