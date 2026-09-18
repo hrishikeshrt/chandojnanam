@@ -15,6 +15,8 @@ from flask import (
 from flask_uploads import (
     UploadSet, IMAGES, TEXT, configure_uploads, patch_request_class
 )
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 import pytesseract
 from google_drive_ocr import GoogleOCRApplication
@@ -77,6 +79,10 @@ texts = UploadSet('texts', TEXT)
 configure_uploads(webapp, (photos, texts,))
 patch_request_class(webapp, 5 * 1024 * 1024)  # Limit: 5 megabytes
 
+limiter = Limiter(
+    get_remote_address, app=webapp, default_limits=["60 per hour"]
+)
+
 ###############################################################################
 
 
@@ -119,6 +125,7 @@ def transliterate_filter(text, scheme):
 
 
 @webapp.route('/text', methods=['GET', 'POST'], strict_slashes=False)
+@limiter.limit("10 per minute")
 def identify_from_text():
     data = {}
     data['title'] = 'Identify from Text'
@@ -150,6 +157,7 @@ def identify_from_text():
 
 
 @webapp.route('/image', methods=['GET', 'POST'], strict_slashes=False)
+@limiter.limit("10 per minute")
 def identify_from_image():
     data = {}
     data['title'] = 'Identify from Image'
@@ -222,6 +230,7 @@ def identify_from_image():
 
 
 @webapp.route('/file', methods=['GET', 'POST'], strict_slashes=False)
+@limiter.limit("10 per minute")
 def identify_from_file():
     data = {}
     data['title'] = 'Identify from Verse'
@@ -292,9 +301,11 @@ def show_examples():
 
 
 if __name__ == '__main__':
+    import os
     import socket
     hostname = socket.gethostname()
     host = socket.gethostbyname(hostname)
     port = 2490
+    debug = os.environ.get('FLASK_DEBUG', 'false').lower() == 'true'
 
-    webapp.run(host=host, port=port, debug=True)
+    webapp.run(host=host, port=port, debug=debug)
