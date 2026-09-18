@@ -60,6 +60,9 @@ webapp = Flask(APPLICATION_NAME,
                template_folder=TEMPLATE_PATH,
                static_folder=STATIC_PATH)
 webapp.secret_key = SECRET_KEY
+webapp.config['SESSION_COOKIE_HTTPONLY'] = True
+webapp.config['SESSION_COOKIE_SECURE'] = True
+webapp.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 webapp.jinja_env.policies["json.dumps_kwargs"] = {
     'ensure_ascii': False,
     'sort_keys': False
